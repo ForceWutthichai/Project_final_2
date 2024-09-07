@@ -9,7 +9,6 @@ class SuccessScreen extends StatelessWidget {
   final String quizSetName;
   final String userName;
   final int userId;
-
   SuccessScreen({
     required this.selectedDate,
     required this.quizSetName,

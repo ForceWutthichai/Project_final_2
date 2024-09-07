@@ -20,7 +20,6 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _idCardOrPhoneController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _obscureText = true;
-
   void _toggleVisibility() {
     setState(() {
       _obscureText = !_obscureText;

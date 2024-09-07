@@ -12,12 +12,12 @@ class ResultScreen extends StatelessWidget {
   final List<int> selectedAnswers;
   final int userId;
   final String userName;
-
   ResultScreen({
     required this.quizSet,
     required this.selectedAnswers,
     required this.userId,
     required this.userName,
+    
   });
 
   Future<Map<String, dynamic>> _fetchHealthData() async {

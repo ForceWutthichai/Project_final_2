@@ -1,4 +1,5 @@
 import 'package:final_login/constants/color.dart';
+import 'package:final_login/screen/CompletedAppointment%20.dart';
 import 'package:final_login/screen/appointmentDetail.dart';
 import 'package:final_login/screen/mainMenu.dart';
 import 'package:final_login/screen/profile.dart';
@@ -8,9 +9,8 @@ import 'package:salomon_bottom_bar/salomon_bottom_bar.dart';
 class HomeDevicePage extends StatefulWidget {
   final int userId;
   final String userName;
-
   const HomeDevicePage(
-      {super.key, required this.userId, required this.userName});
+      {super.key, required this.userId, required this.userName,});
 
   @override
   State<HomeDevicePage> createState() => _HomeDevicePageState();
@@ -27,6 +27,7 @@ class _HomeDevicePageState extends State<HomeDevicePage> {
     _pages = [
       MainMenu(userName: widget.userName, userId: widget.userId),
       AppointmentDetails(userId: widget.userId),  // ส่ง userId ไปที่ AppointmentDetails
+      CompletedAppointments(userId: widget.userId),
       ProfilePage(userId: widget.userId),
     ];
   }
@@ -52,6 +53,12 @@ class _HomeDevicePageState extends State<HomeDevicePage> {
           SalomonBottomBarItem(
             icon: Icon(Icons.calendar_today,),
             title: Text("รายการนัด"),
+            selectedColor: bottomBarIconColor,
+            unselectedColor: loginBackgroundColor,
+          ),
+          SalomonBottomBarItem(
+            icon: Icon(Icons.done),  // ไอคอนสำหรับ "รายการที่ตรวจแล้ว"
+            title: Text("การตรวจ"),
             selectedColor: bottomBarIconColor,
             unselectedColor: loginBackgroundColor,
           ),
