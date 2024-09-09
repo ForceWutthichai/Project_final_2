@@ -97,16 +97,24 @@ class _LoginPageState extends State<LoginPage> {
   return null;
 }
   String? _validatePassword(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'กรุณากรอกรหัสผ่าน';
-    }
-
-    if (value.length < 6) {
-      return 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร';
-    }
-
-    return null;
+  if (value == null || value.isEmpty) {
+    return 'กรุณากรอกรหัสผ่าน';
   }
+
+  // ตรวจสอบความยาวขั้นต่ำ 6 ตัวอักษร
+  if (value.length < 6) {
+    return 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร';
+  }
+
+  // ตรวจสอบว่ามีเฉพาะตัวเลขและตัวอักษรภาษาอังกฤษ
+  final passwordRegex = RegExp(r'^[a-zA-Z0-9]+$');
+  if (!passwordRegex.hasMatch(value)) {
+    return 'รหัสผ่านต้องประกอบด้วยตัวเลขและตัวอักษรภาษาอังกฤษเท่านั้น';
+  }
+
+  return null;
+}
+
   void _formatIdCardOrPhone() {
   String text = _idCardOrPhoneController.text.replaceAll('-', '');
   if (text.length == 10) {

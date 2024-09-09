@@ -1,20 +1,23 @@
-import 'package:final_login/screen/edit_profile_page2.dart';
-import 'package:final_login/screen/login.dart';
-import 'package:flutter/material.dart';
 import 'package:final_login/constants/color.dart';
 import 'package:final_login/data/evaluation.dart';
-import 'package:final_login/screen/questionscreen.dart';
+import 'package:final_login/screen/edit_profile_page2.dart';
+import 'package:final_login/screen/login.dart';
 import 'package:final_login/screen/profile.dart';
+import 'package:final_login/screen/questionscreen.dart';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:quickalert/models/quickalert_type.dart';
 import 'package:quickalert/widgets/quickalert_dialog.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class MainMenu extends StatefulWidget {
   final String userName;
   final int userId;
+
   MainMenu({
     required this.userName,
     required this.userId,
@@ -29,6 +32,9 @@ class _MainMenuState extends State<MainMenu> {
   late String latestProgramName = 'ยังไม่มีนัดหมาย';
   late String latestAppointmentDate = '';
   List<String> existingAppointments = [];
+  late WebSocketChannel channel;
+  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
 
   @override
   void initState() {
@@ -41,11 +47,96 @@ class _MainMenuState extends State<MainMenu> {
           latestProgramName = data['program_name'];
           latestAppointmentDate =
               _formatDateToThai(DateTime.parse(data['appointment_date']));
+              _checkAppointmentDate(data['appointment_date']);
         });
       }
     });
 
     _fetchExistingAppointments();
+    _connectWebSocket();
+    _initializeNotifications();
+  }
+
+  // ฟังก์ชันเชื่อมต่อ WebSocket
+  void _connectWebSocket() {
+    print('Connecting to WebSocket...');
+    channel = WebSocketChannel.connect(
+      Uri.parse('ws://localhost:8080/${widget.userId}'),
+    );
+
+    channel.stream.listen((message) {
+      print('Received message: $message');
+      _showNotification('การแจ้งเตือนนัดหมาย', message);
+    }, onError: (error) {
+      print('WebSocket Error: $error');
+    }, onDone: () {
+      print('WebSocket connection closed');
+    });
+
+    print('WebSocket connection established.');
+  }
+
+  // ฟังก์ชันตั้งค่า Notification
+  void _initializeNotifications() {
+    var initializationSettingsAndroid =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
+    var initializationSettingsIOS = IOSInitializationSettings();
+    var initializationSettings = InitializationSettings(
+      android: initializationSettingsAndroid,
+      iOS: initializationSettingsIOS,
+    );
+
+    flutterLocalNotificationsPlugin.initialize(initializationSettings);
+  }
+
+  void _checkAppointmentDate(String appointmentDate) {
+    DateTime now = DateTime.now();
+    DateTime appointment = DateTime.parse(appointmentDate);
+    Duration difference = appointment.difference(now);
+
+    print('Current Date: $now');
+    print('Appointment Date: $appointment');
+    print('Difference in Hours: ${difference.inHours}');
+
+    // ถ้าเหลืออีกน้อยกว่า 24 ชั่วโมง
+    if (difference.inHours <= 24 && difference.inHours > 0) {
+      print('จะมีการแจ้งเตือน: คุณมีนัดหมายในอีก 1 วัน');
+      _showNotification('การแจ้งเตือนนัดหมาย', 'คุณมีนัดหมายในอีก 1 วัน');
+    } else {
+      print('ยังไม่มีการแจ้งเตือนในตอนนี้');
+    }
+}
+
+
+  // ฟังก์ชันแสดง Notification
+  Future<void> _showNotification(String title, String body) async {
+    print('Showing notification with title: $title and body: $body');
+
+    var androidPlatformChannelSpecifics = AndroidNotificationDetails(
+      'your_channel_id',
+      'your_channel_name',
+      importance: Importance.max,
+      priority: Priority.high,
+      showWhen: false,
+    );
+    var iOSPlatformChannelSpecifics = IOSNotificationDetails();
+    var platformChannelSpecifics = NotificationDetails(
+        android: androidPlatformChannelSpecifics,
+        iOS: iOSPlatformChannelSpecifics);
+
+    await flutterLocalNotificationsPlugin.show(
+      0,
+      title,
+      body,
+      platformChannelSpecifics,
+      payload: 'Default_Sound',
+    );
+  }
+
+  @override
+  void dispose() {
+    channel.sink.close();
+    super.dispose();
   }
 
   Future<Map<String, dynamic>?> _fetchLatestAppointment() async {
@@ -304,6 +395,7 @@ class HealthButton extends StatelessWidget {
     required this.userId,
     required this.existingAppointments,
   });
+
   Future<int> _fetchAppointmentCount(String programName) async {
     final response = await http.get(
       Uri.parse('http://localhost:3000/evaluation-results/count/$programName'),
@@ -349,7 +441,7 @@ class HealthButton extends StatelessWidget {
     } else if (quizSet.name == 'เลิกบุหรี่') {
       maxAllowed = 10;
     } else {
-      maxAllowed = 1000; // หรือจำนวนมากที่เป็นไปได้สำหรับโปรแกรมอื่นๆ
+      maxAllowed = 1000;
     }
 
     try {

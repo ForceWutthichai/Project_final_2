@@ -50,7 +50,7 @@ class _HomeDevicePageState extends State<HomeDevicePage> {
             unselectedColor: loginBackgroundColor,
           ),
           SalomonBottomBarItem(
-            icon: Icon(Icons.calendar_today),
+            icon: Icon(Icons.calendar_today,),
             title: Text("รายการนัด"),
             selectedColor: bottomBarIconColor,
             unselectedColor: loginBackgroundColor,
